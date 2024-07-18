@@ -14,6 +14,37 @@ export default function Home() {
   const [number, setNumber] = useState();
   const tokenAbi = process.env.abi; // Assuming you have the ABI in your environment variables
 
+  //------------------------------------
+
+  const [ethWindow, setEthWindow] = useState(null);
+
+  const initialize = async () => {
+    if (window.ethereum) {
+      console.log("Metamask is installed");
+      setEthWindow(window.ethereum);
+    }
+
+    if (ethWindow) {
+      const accountsArray = await ethWindow.request({ method: "eth_accounts" });
+      setAcc(accountsArray[0]);
+      console.log(accountsArray[0]);
+    }
+    ConnectToMetamask();
+  };
+
+  const ConnectToMetamask = async () => {
+    if (ethWindow) {
+      const accounts = await window.ethereum.request({
+        method: "eth_requestAccounts",
+      });
+      setAcc(accounts[0]);
+    }
+
+    // connectToMetaMask();
+  };
+
+  //--------------------------------------
+
   const disconnectWallet = () => {
     setAcc(undefined);
     setContractInstance(undefined);
@@ -23,49 +54,36 @@ export default function Home() {
   const increaseNumber = async () => {
     if (contractInstance) {
       const tx = await contractInstance.increase();
-      tx.wait();
+      tx.wait(2);
+
+      setNumber(undefined);
+
       // window.location.reload();
     }
   };
 
-  const connectToMetaMask = async () => {
+  const connectToMetaMaskContract = async () => {
     try {
-      // Request account access if needed
+      // const provider = new ethers.providers.Web3Provider(window.ethereum);
+      // const provider = new ethers.BrowserProvider(window.ethereum);
 
-      const accounts = await window.ethereum.request({
-        method: "eth_requestAccounts",
-      });
-      setAcc(accounts[0]);
+      // // Get the signer
+      // const signer = await provider.getSigner();
+      console.log(tokenAbi);
 
-      console.log(accounts[0]);
-      console.log(window.ethereum);
+      const provider = new ethers.BrowserProvider(window.ethereum);
 
-      // Create a new provider from MetaMask
-      try {
-        // const provider = new ethers.providers.Web3Provider(window.ethereum);
-        // const provider = new ethers.BrowserProvider(window.ethereum);
+      // It also provides an opportunity to request access to write
+      // operations, which will be performed by the private key
+      // that MetaMask manages for the user.
+      const signer = await provider.getSigner();
 
-        // // Get the signer
-        // const signer = await provider.getSigner();
-        console.log(tokenAbi);
-
-        const provider = new ethers.BrowserProvider(window.ethereum);
-
-        // It also provides an opportunity to request access to write
-        // operations, which will be performed by the private key
-        // that MetaMask manages for the user.
-        const signer = await provider.getSigner();
-
-        // Create a new instance of the contract with the signer
-        const contract = new ethers.Contract(contractAddress, tokenAbi, signer);
-        setContractInstance(contract);
-        console.log(contract);
-      } catch (error) {
-        console.error("User rejected the request:", error);
-      }
-      getNum();
+      // Create a new instance of the contract with the signer
+      const contract = new ethers.Contract(contractAddress, tokenAbi, signer);
+      setContractInstance(contract);
+      console.log(contract);
     } catch (error) {
-      console.log("okay not working");
+      console.error("User rejected the request:", error);
     }
   };
 
@@ -85,7 +103,10 @@ export default function Home() {
     getNum();
   }
 
-  useEffect(() => {}, [contractInstance, number]);
+  useEffect(() => {
+    initialize();
+    getNum();
+  }, [contractInstance, acc]);
 
   return (
     <Layout>
@@ -94,7 +115,7 @@ export default function Home() {
       <p>The Number is : {number}</p>
 
       <div>
-        <button className="bg-blue-400" onClick={connectToMetaMask}>
+        <button className="bg-blue-400" onClick={connectToMetaMaskContract}>
           Connect
         </button>
 
