@@ -4,6 +4,7 @@ import Image from "next/image";
 import Layout from "@/app/components/Layout";
 import Link from "next/link";
 import { ethers } from "ethers";
+import SideNav from "./components/SideNav";
 
 export default function Home() {
   const [acc, setAcc] = useState();
@@ -131,6 +132,7 @@ export default function Home() {
       <button>
         <Link href="/Projects">Next Page</Link>
       </button>
+      <SideNav />
     </Layout>
   );
 }
